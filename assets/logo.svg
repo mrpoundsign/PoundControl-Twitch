@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#0A0A0C" stroke="#9146FF" stroke-width="10"/>
+  <!-- Twitch-inspired broadcast bubble -->
+  <path d="M62 48 L46 78 V182 H88 V212 L118 182 H152 L206 128 V48 Z" fill="#9146FF"/>
+  <path d="M188 120 L156 152 H112 L88 176 V152 H66 V66 H188 Z" fill="#FFFFFF"/>
+  <!-- Eyes -->
+  <rect x="148" y="88" width="16" height="42" rx="4" fill="#9146FF"/>
+  <rect x="110" y="88" width="16" height="42" rx="4" fill="#9146FF"/>
+  <!-- PoundControl Electric Sky Blue deck accent dots -->
+  <circle cx="196" cy="196" r="10" fill="#38BDF8"/>
+  <circle cx="168" cy="196" r="10" fill="#38BDF8"/>
+  <circle cx="196" cy="168" r="10" fill="#38BDF8"/>
+</svg>

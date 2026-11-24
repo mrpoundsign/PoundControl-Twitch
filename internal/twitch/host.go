@@ -32,13 +32,14 @@ type HTTPResponse struct {
 
 // VisualPatch mirrors PoundControl's plugin.VisualPatch ABI.
 type VisualPatch struct {
-	Title    *string        `json:"title,omitempty"`
-	Subtitle *string        `json:"subtitle,omitempty"`
-	Color    *string        `json:"color,omitempty"`
-	ImageURI *string        `json:"image,omitempty"`
-	State    *int           `json:"state,omitempty"`
-	Feedback map[string]any `json:"feedback,omitempty"`
-	Flash    string         `json:"flash,omitempty"` // "", "ok", or "alert"
+	Title           *string        `json:"title,omitempty"`
+	Subtitle        *string        `json:"subtitle,omitempty"`
+	Color           *string        `json:"color,omitempty"`
+	BackgroundColor *string        `json:"backgroundColor,omitempty"`
+	ImageURI        *string        `json:"image,omitempty"`
+	State           *int           `json:"state,omitempty"`
+	Feedback        map[string]any `json:"feedback,omitempty"`
+	Flash           string         `json:"flash,omitempty"` // "", "ok", or "alert"
 }
 
 // ActionEvent mirrors PoundControl's plugin.ActionEvent ABI.

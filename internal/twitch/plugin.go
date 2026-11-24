@@ -138,8 +138,8 @@ func (p *Plugin) persistAuth(a AuthState) {
 func (p *Plugin) persistConfigState(statusMsg string, clearSecrets bool) {
 	a := p.client.Auth()
 	clientID := strings.TrimSpace(a.ClientID)
-	if clientID == "" {
-		clientID = strings.TrimSpace(DefaultClientID)
+	if clientID == strings.TrimSpace(DefaultClientID) {
+		clientID = ""
 	}
 
 	gs := map[string]any{
@@ -507,7 +507,9 @@ func (p *Plugin) pollDeviceAuth() {
 	}
 
 	p.reconcilePollTimer()
-	p.pollLiveStatus()
+	for _, slot := range p.slots {
+		p.renderSlotIdle(slot)
+	}
 }
 
 func (p *Plugin) stopDeviceAuth() {
@@ -900,8 +902,9 @@ func (p *Plugin) renderSlotIdle(slot *slotState) {
 	case ActionViewerCount:
 		if !p.client.Auth().IsSignedIn() {
 			p.host.UpdateVisual(slot.ctxID, VisualPatch{
-				Subtitle: new("Sign In"),
-				Color:    new(colorInactive),
+				Subtitle:        new("Sign In"),
+				Color:           new(colorInactive),
+				BackgroundColor: new(""),
 			})
 			return
 		}
@@ -912,8 +915,9 @@ func (p *Plugin) renderSlotIdle(slot *slotState) {
 			}
 		}
 		p.host.UpdateVisual(slot.ctxID, VisualPatch{
-			Subtitle: new("..."),
-			Color:    new(colorTwitch),
+			Subtitle:        new("..."),
+			Color:           new(colorTwitch),
+			BackgroundColor: new(""),
 		})
 	case ActionEmoteChat, ActionFollowersChat, ActionSubChat, ActionSlowChat:
 		if bid, ok := p.cachedBroadcasterID(slot); ok {
@@ -923,9 +927,10 @@ func (p *Plugin) renderSlotIdle(slot *slotState) {
 			}
 		}
 		p.host.UpdateVisual(slot.ctxID, VisualPatch{
-			Subtitle: new("Off"),
-			Color:    new(colorInactive),
-			State:    new(0),
+			Subtitle:        new("Off"),
+			Color:           new(colorInactive),
+			BackgroundColor: new(""),
+			State:           new(0),
 		})
 	case ActionShieldMode:
 		if bid, ok := p.cachedBroadcasterID(slot); ok {
@@ -935,9 +940,10 @@ func (p *Plugin) renderSlotIdle(slot *slotState) {
 			}
 		}
 		p.host.UpdateVisual(slot.ctxID, VisualPatch{
-			Subtitle: new("Off"),
-			Color:    new(colorInactive),
-			State:    new(0),
+			Subtitle:        new("Off"),
+			Color:           new(colorInactive),
+			BackgroundColor: new(""),
+			State:           new(0),
 		})
 	}
 }
@@ -994,16 +1000,19 @@ func (p *Plugin) renderChatModeSlot(slot *slotState, cs ChatSettings, flash stri
 	}
 
 	col := colorInactive
+	bgCol := ""
 	st := 0
 	if active {
 		col = colorActive
+		bgCol = colorActiveBg
 		st = 1
 	}
 	p.host.UpdateVisual(slot.ctxID, VisualPatch{
-		Subtitle: new(sub),
-		Color:    new(col),
-		State:    new(st),
-		Flash:    flash,
+		Subtitle:        new(sub),
+		Color:           new(col),
+		BackgroundColor: new(bgCol),
+		State:           new(st),
+		Flash:           flash,
 	})
 }
 
@@ -1022,17 +1031,20 @@ func (p *Plugin) renderShieldSlotsForChannel(broadcasterID string, active bool, 
 func (p *Plugin) renderShieldSlot(slot *slotState, active bool, flash string) {
 	sub := "Off"
 	col := colorInactive
+	bgCol := ""
 	st := 0
 	if active {
 		sub = "ACTIVE"
 		col = colorShieldOn
+		bgCol = colorShieldBg
 		st = 1
 	}
 	p.host.UpdateVisual(slot.ctxID, VisualPatch{
-		Subtitle: new(sub),
-		Color:    new(col),
-		State:    new(st),
-		Flash:    flash,
+		Subtitle:        new(sub),
+		Color:           new(col),
+		BackgroundColor: new(bgCol),
+		State:           new(st),
+		Flash:           flash,
 	})
 }
 

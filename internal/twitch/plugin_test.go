@@ -118,7 +118,7 @@ func TestBuildManifest(t *testing.T) {
 		SettingVerifyURL:    "link",
 		SettingAuthConnect:  "button",
 		SettingAuthSignOut:  "button",
-		SettingClientID:     "text",
+		SettingClientID:     "password",
 		SettingAccessToken:  "password",
 		SettingRefreshToken: "password",
 	}
@@ -132,6 +132,9 @@ func TestBuildManifest(t *testing.T) {
 		}
 		if f.Type != wantType {
 			t.Fatalf("global field %q type = %q, want %q", f.Key, f.Type, wantType)
+		}
+		if f.Key == SettingClientID && f.Default != nil {
+			t.Fatalf("expected %q Default to be nil so built-in Client ID stays hidden, got %v", SettingClientID, f.Default)
 		}
 		delete(wantGlobalTypes, f.Key)
 	}
@@ -631,14 +634,24 @@ func TestChatModesAndShieldModeToggles(t *testing.T) {
 	if !curChat.EmoteMode || !curChat.FollowerMode || !curChat.SubscriberMode || !curChat.SlowMode || !curShield {
 		t.Fatalf("expected all modes active, got chat=%+v shield=%v", curChat, curShield)
 	}
-	if v := host.lastVisual(t, "follow-1"); v.Subtitle == nil || *v.Subtitle != "30m" {
-		t.Fatalf("expected followers subtitle 30m, got %+v", v)
+	if v := host.lastVisual(t, "follow-1"); v.Subtitle == nil || *v.Subtitle != "30m" || v.BackgroundColor == nil || *v.BackgroundColor != colorActiveBg {
+		t.Fatalf("expected followers subtitle 30m with active background, got %+v", v)
 	}
-	if v := host.lastVisual(t, "slow-1"); v.Subtitle == nil || *v.Subtitle != "15s" {
-		t.Fatalf("expected slow subtitle 15s, got %+v", v)
+	if v := host.lastVisual(t, "slow-1"); v.Subtitle == nil || *v.Subtitle != "15s" || v.BackgroundColor == nil || *v.BackgroundColor != colorActiveBg {
+		t.Fatalf("expected slow subtitle 15s with active background, got %+v", v)
 	}
-	if v := host.lastVisual(t, "shield-1"); v.Subtitle == nil || *v.Subtitle != "ACTIVE" || *v.Color != colorShieldOn {
-		t.Fatalf("expected shield ACTIVE red visual, got %+v", v)
+	if v := host.lastVisual(t, "shield-1"); v.Subtitle == nil || *v.Subtitle != "ACTIVE" || *v.Color != colorShieldOn || v.BackgroundColor == nil || *v.BackgroundColor != colorShieldBg {
+		t.Fatalf("expected shield ACTIVE red visual with shield background, got %+v", v)
+	}
+
+	// Toggle shield and emote mode back OFF -> clears background override.
+	_ = p.HandleEvent(ActionEvent{Type: "keyDown", Context: "emote-1", ActionUUID: ActionEmoteChat})
+	_ = p.HandleEvent(ActionEvent{Type: "keyDown", Context: "shield-1", ActionUUID: ActionShieldMode})
+	if v := host.lastVisual(t, "emote-1"); v.BackgroundColor == nil || *v.BackgroundColor != "" {
+		t.Fatalf("expected inactive emote mode to clear BackgroundColor, got %+v", v)
+	}
+	if v := host.lastVisual(t, "shield-1"); v.BackgroundColor == nil || *v.BackgroundColor != "" {
+		t.Fatalf("expected inactive shield mode to clear BackgroundColor, got %+v", v)
 	}
 
 	// Disappear all slots -> poll timer stops.
@@ -736,5 +749,51 @@ func TestBroadcastActionsAdClipMarkerChatAndViewers(t *testing.T) {
 	_ = p.OnTimer(TimerEvent{TimerID: timerPoll})
 	if v := host.lastVisual(t, "viewers-1"); v.Subtitle == nil || *v.Subtitle != "1.25K" {
 		t.Fatalf("expected viewer count 1.25K, got %+v", v)
+	}
+}
+
+func TestDefaultClientIDNotPersistedAndCustomClientIDMasked(t *testing.T) {
+	if DefaultClientID == "" {
+		t.Skip("DefaultClientID is empty")
+	}
+
+	host := newFakeHost()
+	p := NewPlugin(host)
+
+	// Saving settings without a custom clientId uses DefaultClientID internally and stores "".
+	if err := p.HandleGlobalSettings(map[string]any{}); err != nil {
+		t.Fatalf("HandleGlobalSettings(empty) error = %v", err)
+	}
+	if got := host.globalSettings[SettingClientID]; got != "" {
+		t.Fatalf("expected %q persisted as empty when using DefaultClientID, got %v", SettingClientID, got)
+	}
+	if p.client.EffectiveClientID() != DefaultClientID {
+		t.Fatalf("EffectiveClientID() = %q, want %q", p.client.EffectiveClientID(), DefaultClientID)
+	}
+
+	// Saving a custom clientId persists it for the masked OS keyring entry.
+	if err := p.HandleGlobalSettings(map[string]any{
+		SettingClientID: "custom-client-id",
+	}); err != nil {
+		t.Fatalf("HandleGlobalSettings(custom) error = %v", err)
+	}
+	if got := host.globalSettings[SettingClientID]; got != "custom-client-id" {
+		t.Fatalf("expected custom clientId persisted, got %v", got)
+	}
+	if p.client.EffectiveClientID() != "custom-client-id" {
+		t.Fatalf("EffectiveClientID() = %q, want %q", p.client.EffectiveClientID(), "custom-client-id")
+	}
+
+	// Clearing the custom clientId reverts to DefaultClientID and stores "".
+	if err := p.HandleGlobalSettings(map[string]any{
+		SettingClientID: "",
+	}); err != nil {
+		t.Fatalf("HandleGlobalSettings(clear) error = %v", err)
+	}
+	if got := host.globalSettings[SettingClientID]; got != "" {
+		t.Fatalf("expected cleared clientId persisted as empty, got %v", got)
+	}
+	if p.client.EffectiveClientID() != DefaultClientID {
+		t.Fatalf("EffectiveClientID() = %q, want %q", p.client.EffectiveClientID(), DefaultClientID)
 	}
 }

@@ -47,4 +47,4 @@ Output is written to `build/bin/poundcontrol-twitch.wasm`.
 2. Open **Settings → Twitch** (via the gear icon next to the **Twitch** category in the Action Catalog, or **Plugins → Configure**).
 3. Click **Sign In with Twitch**.
 4. Copy the generated **Activation Code**, click the **Twitch Activation Page** link (`twitch.tv/activate`), and authorize PoundControl.
-5. Once authorized, your session updates automatically and OAuth tokens are stored securely in your OS keyring (automatically refreshed as needed). You can optionally override the **Twitch Client ID** under **Advanced**.
+5. Once authorized, your session updates automatically and OAuth tokens are stored securely in your OS keyring (automatically refreshed as needed). You can optionally override the **Twitch Client ID** under **Advanced**; custom Client IDs are masked and stored in your OS keyring.

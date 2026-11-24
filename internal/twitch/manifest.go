@@ -33,7 +33,9 @@ const (
 	categoryTwitch  = "Twitch"
 	colorTwitch     = "#9146FF"
 	colorActive     = "#22C55E"
+	colorActiveBg   = "#14532D"
 	colorShieldOn   = "#EF4444"
+	colorShieldBg   = "#5C1922"
 	colorInactive   = "#27272A"
 	colorErrorState = "#DC2626"
 )
@@ -177,11 +179,10 @@ func BuildManifest() Manifest {
 			{
 				Key:         SettingClientID,
 				Label:       "Twitch Client ID",
-				Type:        "text",
+				Type:        "password",
 				Section:     "Advanced",
-				Default:     DefaultClientID,
-				Placeholder: "Your Twitch Application Client ID",
-				Help:        "Pre-configured with PoundControl's public Client ID. Override only if using your own Twitch application.",
+				Placeholder: "Using built-in Client ID — enter to override",
+				Help:        "Pre-configured with PoundControl's public Client ID. Override only if using your own Twitch application; custom IDs are masked and stored in your OS keyring.",
 			},
 			{
 				Key:     SettingAccessToken,

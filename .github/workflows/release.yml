@@ -1,0 +1,86 @@
+name: Release PoundControl-Twitch
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release Wasm Plugin
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+          cache: true
+
+      - name: Run go fix -diff
+        run: |
+          DIFF="$(go fix -diff ./...)"
+          if [ -n "$DIFF" ]; then
+            echo "$DIFF"
+            exit 1
+          fi
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run golangci-lint (v2)
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.14.0
+
+      - name: Run Full Test Suite
+        run: go test -count=1 -v ./...
+
+      - name: Build & Package Wasm Release Artifact
+        env:
+          TWITCH_CLIENT_ID: ${{ vars.TWITCH_CLIENT_ID }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [ -z "$TAG" ] || [[ ! "$TAG" =~ ^v ]]; then
+            TAG="v0.1.0-snapshot"
+          fi
+          VER="${TAG#v}"
+
+          chmod +x ./build.sh
+          VERSION="$VER" ./build.sh wasm
+
+          mkdir -p dist
+          cp -f build/bin/poundcontrol-twitch.wasm dist/poundcontrol-twitch.wasm
+          (
+            cd dist
+            sha256sum poundcontrol-twitch.wasm > checksums.txt
+            cp -f checksums.txt SHA256SUMS.txt
+          )
+          echo "=== dist/checksums.txt ==="
+          cat dist/checksums.txt
+
+      - name: Upload Wasm Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twitch-wasm-dist
+          path: dist/
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
+            gh release create "${{ github.ref_name }}" --verify-tag --generate-notes
+          fi
+          gh release upload "${{ github.ref_name }}" \
+            dist/poundcontrol-twitch.wasm \
+            dist/checksums.txt \
+            dist/SHA256SUMS.txt \
+            --clobber

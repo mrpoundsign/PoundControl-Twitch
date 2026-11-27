@@ -75,7 +75,7 @@ jobs:
           version: v2.14.0
 
       - name: Run Full Test Suite
-        run: go test -count=1 -v ./...
+        run: go test -race -count=1 ./...
 
       - name: Build Wasm Release Artifact
         env:

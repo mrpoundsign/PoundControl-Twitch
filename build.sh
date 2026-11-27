@@ -21,8 +21,8 @@ run_lint() {
 }
 
 run_test() {
-    echo "==> go test -count=1 -v ./..."
-    go test -count=1 -v ./...
+    echo "==> go test -race -count=1 ./..."
+    go test -race -count=1 ./...
 }
 
 run_wasm() {

@@ -2,8 +2,19 @@
 set -euo pipefail
 
 TARGET="${1:-all}"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLIENT_ID="${TWITCH_CLIENT_ID:-}"
 VERSION="${VERSION:-0.1.0}"
+
+if command -v git &>/dev/null && [ -d "$ROOT_DIR/.git" ] && [ -d "$ROOT_DIR/.githooks" ]; then
+    git -C "$ROOT_DIR" config core.hooksPath .githooks 2>/dev/null || true
+fi
+
+for dir in "$HOME/.local/bin" "$HOME/go/bin" "/usr/local/go/bin" "$HOME/.asdf/shims" "$HOME/.asdf/bin" "/home/linuxbrew/.linuxbrew/bin" "/home/linuxbrew/.linuxbrew/sbin"; do
+    if [ -d "$dir" ] && [[ ":$PATH:" != *":$dir:"* ]]; then
+        export PATH="$dir:$PATH"
+    fi
+done
 
 run_lint() {
     echo "==> go fix -diff ./..."

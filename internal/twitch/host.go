@@ -11,7 +11,7 @@ import "time"
 var DefaultClientID = "ihtyx8njcjifiv7lg2oxjmk49s0uxz"
 
 // PluginVersion can be overridden at build time via -ldflags.
-var PluginVersion = "0.1.0"
+var PluginVersion = "0.1.1"
 
 // HTTPRequest mirrors PoundControl's GuestHTTPRequest ABI.
 type HTTPRequest struct {
